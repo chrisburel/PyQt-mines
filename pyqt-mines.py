@@ -224,7 +224,7 @@ class MinesweeperItemEditor(QtGui.QWidget):
 if __name__ == '__main__':
     import sys
     app = QtGui.QApplication(sys.argv)
-    model = MinesweeperModel(5, 10, 10)
+    model = MinesweeperModel(16, 30, 99)
     view = QtGui.QTableView()
     view.setModel(model)
     view.verticalHeader().hide()
