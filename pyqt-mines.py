@@ -34,6 +34,10 @@ class MinesweeperItem(object):
         self._isRevealed = newVal
 
 class MinesweeperModel(QtCore.QAbstractItemModel):
+    BombNeighborRole = QtCore.Qt.UserRole
+    IsBombRole = QtCore.Qt.UserRole + 1
+    IsRevealedRole = QtCore.Qt.UserRole + 2
+
     def __init__(self, rowCount, columnCount, bombCount, parent=None):
         super(MinesweeperModel, self).__init__(parent)
         self._rowCount = rowCount
@@ -72,16 +76,26 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         return self._columnCount
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
-        if role != QtCore.Qt.DisplayRole:
+        supportedRoles = (
+            MinesweeperModel.BombNeighborRole,
+            MinesweeperModel.IsBombRole,
+            MinesweeperModel.IsRevealedRole,
+        )
+
+        if role not in supportedRoles:
             return None
         if not index.isValid():
             return None
+
         item = index.internalPointer()
-        if item.isBomb:
-            return 'B'
-        if item.bombNeighborCount:
-            return str(item.bombNeighborCount)
-        return ''
+        if role == MinesweeperModel.BombNeighborRole:
+            return item.bombNeighborCount
+        elif role == MinesweeperModel.IsBombRole:
+            return item.isBomb
+        elif role == MinesweeperModel.IsRevealedRole:
+            return item.isRevealed
+        return None
+
 
     def index(self, row, column, parent=QtCore.QModelIndex()):
         if parent.isValid():
