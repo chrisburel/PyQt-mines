@@ -40,6 +40,8 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
     IsBombRole = QtCore.Qt.UserRole + 1
     IsRevealedRole = QtCore.Qt.UserRole + 2
 
+    gameOver = QtCore.Signal()
+
     def __init__(self, rowCount, columnCount, bombCount, parent=None):
         super(MinesweeperModel, self).__init__(parent)
         self._rowCount = rowCount
@@ -125,6 +127,10 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         if item.isRevealed == value:
             return
         item.isRevealed = value
+
+        if item.isBomb and item.isRevealed:
+            self.gameOver.emit()
+
         self.dataChanged.emit(index, index)
         if item.bombNeighborCount == 0:
             for neighbor in self.bombNeighbors(index):
@@ -160,7 +166,11 @@ class MinesweeperItemEditor(QtGui.QWidget):
             painter.drawRect(event.rect())
             return
 
-        painter.setBrush(QtCore.Qt.black)
+        isBomb = self.index.data(MinesweeperModel.IsBombRole)
+        if isBomb:
+            painter.setBrush(QtCore.Qt.red)
+        else:
+            painter.setBrush(QtCore.Qt.black)
         painter.drawRect(event.rect())
 
         bombNeighborCount = self.index.data(MinesweeperModel.BombNeighborRole)
@@ -185,6 +195,12 @@ if __name__ == '__main__':
         for column in range(model.columnCount()):
             index = model.index(row, column)
             view.openPersistentEditor(index)
+
+    model.gameOver.connect(lambda: QtGui.QMessageBox.information(
+        view,
+        'Game Over',
+        'Game Over!'
+    ))
 
     view.show()
     app.exec_()
