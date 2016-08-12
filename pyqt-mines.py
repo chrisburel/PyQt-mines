@@ -7,6 +7,7 @@ class MinesweeperItem(object):
         self.column = column
         self._isBomb = False
         self._bombNeighborCount = 0
+        self._isRevealed = False
 
     @property
     def bombNeighborCount(self):
@@ -23,6 +24,14 @@ class MinesweeperItem(object):
     @isBomb.setter
     def isBomb(self, newVal):
         self._isBomb = newVal
+
+    @property
+    def isRevealed(self):
+        return self._isRevealed
+
+    @isRevealed.setter
+    def isRevealed(self, newVal):
+        self._isRevealed = newVal
 
 class MinesweeperModel(QtCore.QAbstractItemModel):
     def __init__(self, rowCount, columnCount, bombCount, parent=None):
