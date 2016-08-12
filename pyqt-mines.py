@@ -50,7 +50,7 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         item = index.internalPointer()
         return '1' if item in self._bombItems else ''
 
-    def index(self, row, column, parent):
+    def index(self, row, column, parent=QtCore.QModelIndex()):
         if parent.isValid():
             return QtCore.QModelIndex()
         if row < 0 or column < 0 or row >= self._rowCount or column >= self._columnCount:
