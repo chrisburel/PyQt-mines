@@ -96,6 +96,8 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
             return item.isRevealed
         return None
 
+    def flags(self, index):
+        return super(MinesweeperModel, self).flags(index) | QtCore.Qt.ItemIsEditable
 
     def index(self, row, column, parent=QtCore.QModelIndex()):
         if parent.isValid():
@@ -114,6 +116,18 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
             return 0
         return self._rowCount
 
+class MinesweeperDelegate(QtGui.QStyledItemDelegate):
+    def createEditor(self, parent, option, index):
+        return MinesweeperItemEditor(QtCore.QPersistentModelIndex(index), parent)
+
+    def paint(self, painter, option, index):
+        return
+
+class MinesweeperItemEditor(QtGui.QWidget):
+    def __init__(self, index, parent=None):
+        super(MinesweeperItemEditor, self).__init__(parent)
+        self.index = index
+
 if __name__ == '__main__':
     import sys
     app = QtGui.QApplication(sys.argv)
@@ -123,5 +137,14 @@ if __name__ == '__main__':
     view.verticalHeader().hide()
     view.horizontalHeader().hide()
     view.horizontalHeader().setDefaultSectionSize(view.verticalHeader().defaultSectionSize())
+
+    delegate = MinesweeperDelegate()
+    view.setItemDelegate(delegate)
+
+    for row in range(model.rowCount()):
+        for column in range(model.columnCount()):
+            index = model.index(row, column)
+            view.openPersistentEditor(index)
+
     view.show()
     app.exec_()
