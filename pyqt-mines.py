@@ -1,3 +1,5 @@
+import sip
+sip.setapi('QVariant', 2)
 from PyQt4 import QtCore, QtGui
 import random
 
@@ -135,6 +137,31 @@ class MinesweeperItemEditor(QtGui.QWidget):
     def __init__(self, index, parent=None):
         super(MinesweeperItemEditor, self).__init__(parent)
         self.index = index
+
+    def mouseReleaseEvent(self, event):
+        self.index.model().setData(
+            self.index.sibling(self.index.row(), self.index.column()),
+            True,
+            MinesweeperModel.IsRevealedRole
+        )
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+
+        isRevealed = self.index.data(MinesweeperModel.IsRevealedRole)
+        painter.setPen(QtCore.Qt.NoPen)
+        if not isRevealed:
+            painter.setBrush(QtCore.Qt.white)
+            painter.drawRect(event.rect())
+            return
+
+        painter.setBrush(QtCore.Qt.black)
+        painter.drawRect(event.rect())
+
+        bombNeighborCount = self.index.data(MinesweeperModel.BombNeighborRole)
+        if bombNeighborCount:
+            painter.setPen(QtCore.Qt.red)
+            painter.drawText(event.rect(), QtCore.Qt.AlignCenter, str(bombNeighborCount))
 
 if __name__ == '__main__':
     import sys
