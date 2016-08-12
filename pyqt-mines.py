@@ -122,8 +122,13 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         if role != MinesweeperModel.IsRevealedRole:
             return False
         item = index.internalPointer()
+        if item.isRevealed == value:
+            return
         item.isRevealed = value
         self.dataChanged.emit(index, index)
+        if item.bombNeighborCount == 0:
+            for neighbor in self.bombNeighbors(index):
+                self.setData(neighbor, value, role)
         return True
 
 class MinesweeperDelegate(QtGui.QStyledItemDelegate):
