@@ -134,21 +134,31 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         return self._rowCount
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
-        if role != MinesweeperModel.IsRevealedRole:
+        if not index.isValid():
             return False
+
         item = index.internalPointer()
-        if item.isRevealed == value:
-            return
-        item.isRevealed = value
+        if role == MinesweeperModel.IsRevealedRole:
+            if item.isRevealed == value:
+                return
+            item.isRevealed = value
 
-        if item.isBomb and item.isRevealed:
-            self.gameOver.emit()
+            if item.isBomb and item.isRevealed:
+                self.gameOver.emit()
 
-        self.dataChanged.emit(index, index)
-        if item.bombNeighborCount == 0:
-            for neighbor in self.bombNeighbors(index):
-                self.setData(neighbor, value, role)
-        return True
+            self.dataChanged.emit(index, index)
+
+            if item.bombNeighborCount == 0:
+                for neighbor in self.bombNeighbors(index):
+                    self.setData(neighbor, value, role)
+            return True
+        elif role == MinesweeperModel.IsMarkedRole:
+            if item.isMarked == value:
+                return
+            item.isMarked = value
+            self.dataChanged.emit(index, index)
+            return True
+        return False
 
 class MinesweeperDelegate(QtGui.QStyledItemDelegate):
     def createEditor(self, parent, option, index):
