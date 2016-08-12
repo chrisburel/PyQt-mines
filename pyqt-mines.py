@@ -177,6 +177,17 @@ class MinesweeperItemEditor(QtGui.QWidget):
                 not marked,
                 MinesweeperModel.IsMarkedRole
             )
+        elif event.button() == QtCore.Qt.MiddleButton:
+            neighbors = index.model().bombNeighbors(index)
+            bombNeighborCount = index.data(MinesweeperModel.BombNeighborRole)
+            unmarkedNeighbors = [n for n in neighbors if not n.data(MinesweeperModel.IsMarkedRole)]
+            if len(neighbors) - len(unmarkedNeighbors) == bombNeighborCount:
+                for neighbor in unmarkedNeighbors:
+                    index.model().setData(
+                        neighbor,
+                        True,
+                        MinesweeperModel.IsRevealedRole
+                    )
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
