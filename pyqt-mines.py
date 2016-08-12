@@ -9,6 +9,7 @@ class MinesweeperItem(object):
         self.column = column
         self._isBomb = False
         self._bombNeighborCount = 0
+        self._isMarked = False
         self._isRevealed = False
 
     @property
@@ -28,6 +29,14 @@ class MinesweeperItem(object):
         self._isBomb = newVal
 
     @property
+    def isMarked(self):
+        return self._isMarked
+
+    @isMarked.setter
+    def isMarked(self, newVal):
+        self._isMarked = newVal
+
+    @property
     def isRevealed(self):
         return self._isRevealed
 
@@ -39,6 +48,7 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
     BombNeighborRole = QtCore.Qt.UserRole
     IsBombRole = QtCore.Qt.UserRole + 1
     IsRevealedRole = QtCore.Qt.UserRole + 2
+    IsMarkedRole = QtCore.Qt.UserRole + 3
 
     gameOver = QtCore.Signal()
 
@@ -84,6 +94,7 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
             MinesweeperModel.BombNeighborRole,
             MinesweeperModel.IsBombRole,
             MinesweeperModel.IsRevealedRole,
+            MinesweeperModel.IsMarkedRole,
         )
 
         if role not in supportedRoles:
@@ -98,6 +109,8 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
             return item.isBomb
         elif role == MinesweeperModel.IsRevealedRole:
             return item.isRevealed
+        elif role == MinesweeperModel.IsMarkedRole:
+            return item.isMarked
         return None
 
     def flags(self, index):
@@ -150,11 +163,20 @@ class MinesweeperItemEditor(QtGui.QWidget):
         self.index = index
 
     def mouseReleaseEvent(self, event):
-        self.index.model().setData(
-            self.index.sibling(self.index.row(), self.index.column()),
-            True,
-            MinesweeperModel.IsRevealedRole
-        )
+        index = self.index.sibling(self.index.row(), self.index.column())
+        marked = index.data(MinesweeperModel.IsMarkedRole)
+        if event.button() == QtCore.Qt.LeftButton and not marked:
+            index.model().setData(
+                index,
+                True,
+                MinesweeperModel.IsRevealedRole
+            )
+        elif event.button() == QtCore.Qt.RightButton:
+            index.model().setData(
+                index,
+                not marked,
+                MinesweeperModel.IsMarkedRole
+            )
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
@@ -164,6 +186,16 @@ class MinesweeperItemEditor(QtGui.QWidget):
         if not isRevealed:
             painter.setBrush(QtCore.Qt.white)
             painter.drawRect(event.rect())
+
+            isMarked = self.index.data(MinesweeperModel.IsMarkedRole)
+            if isMarked:
+                painter.setBrush(QtCore.Qt.red)
+                trianglePoints = [
+                    event.rect().bottomLeft(),
+                    event.rect().topLeft(),
+                    event.rect().bottomRight(),
+                ]
+                painter.drawPolygon(trianglePoints)
             return
 
         isBomb = self.index.data(MinesweeperModel.IsBombRole)
