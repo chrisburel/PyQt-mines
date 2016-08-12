@@ -50,6 +50,7 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
     IsRevealedRole = QtCore.Qt.UserRole + 2
     IsMarkedRole = QtCore.Qt.UserRole + 3
 
+    gameWon = QtCore.Signal()
     gameOver = QtCore.Signal()
 
     def __init__(self, rowCount, columnCount, bombCount, parent=None):
@@ -57,6 +58,8 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         self._rowCount = rowCount
         self._columnCount = columnCount
         self._bombCount = bombCount
+        self._revealedCount = 0
+        self._countToWin = rowCount * columnCount - bombCount
 
         nonBombItems = set()
 
@@ -146,7 +149,12 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
             if item.isBomb and item.isRevealed:
                 self.gameOver.emit()
 
+            self._revealedCount += 1
             self.dataChanged.emit(index, index)
+
+            if self._revealedCount == self._countToWin:
+                self.gameWon.emit()
+                return True
 
             if item.bombNeighborCount == 0:
                 for neighbor in self.bombNeighbors(index):
@@ -253,6 +261,11 @@ if __name__ == '__main__':
         view,
         'Game Over',
         'Game Over!'
+    ))
+    model.gameWon.connect(lambda: QtGui.QMessageBox.information(
+        view,
+        'You Win',
+        'You Win!'
     ))
 
     view.show()
