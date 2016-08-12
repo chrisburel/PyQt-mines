@@ -248,6 +248,10 @@ if __name__ == '__main__':
     view.verticalHeader().hide()
     view.horizontalHeader().hide()
     view.horizontalHeader().setDefaultSectionSize(view.verticalHeader().defaultSectionSize())
+    view.resize(
+        view.horizontalHeader().length() + 6,
+        view.verticalHeader().length() + 6,
+    )
 
     delegate = MinesweeperDelegate()
     view.setItemDelegate(delegate)
