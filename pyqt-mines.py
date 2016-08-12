@@ -6,6 +6,15 @@ class MinesweeperItem(object):
         self.row = row
         self.column = column
         self._isBomb = False
+        self._bombNeighborCount = 0
+
+    @property
+    def bombNeighborCount(self):
+        return self._bombNeighborCount
+
+    @bombNeighborCount.setter
+    def bombNeighborCount(self, newCount):
+        self._bombNeighborCount = newCount
 
     @property
     def isBomb(self):
@@ -36,6 +45,17 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
             item.isBomb = True
             nonBombItems.remove(item)
             self._bombItems.add(item)
+            for neighbor in self.bombNeighbors(self.index(item.row, item.column)):
+                neighbor.internalPointer().bombNeighborCount += 1
+
+    def bombNeighbors(self, index):
+        neighbors = []
+        for row in range(index.row() - 1, index.row() + 2):
+            for column in range(index.column() - 1, index.column() + 2):
+                neighbor = index.sibling(row, column)
+                if neighbor.isValid() and neighbor != self:
+                    neighbors.append(neighbor)
+        return neighbors
 
     def columnCount(self, parent=QtCore.QModelIndex()):
         if parent.isValid():
@@ -48,7 +68,11 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         if not index.isValid():
             return None
         item = index.internalPointer()
-        return '1' if item in self._bombItems else ''
+        if item.isBomb:
+            return 'B'
+        if item.bombNeighborCount:
+            return str(item.bombNeighborCount)
+        return ''
 
     def index(self, row, column, parent=QtCore.QModelIndex()):
         if parent.isValid():
