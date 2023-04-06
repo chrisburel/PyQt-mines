@@ -1,6 +1,4 @@
-import sip
-sip.setapi('QVariant', 2)
-from PyQt4 import QtCore, QtGui
+from PySide2 import QtCore, QtGui, QtWidgets
 import random
 
 class MinesweeperItem(object):
@@ -61,17 +59,17 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         self._revealedCount = 0
         self._countToWin = rowCount * columnCount - bombCount
 
-        nonBombItems = set()
+        nonBombItems = list()
 
         self._items = [list() for _ in range(rowCount)]
         for row in range(rowCount):
             for column in range(columnCount):
                 item = MinesweeperItem(row, column)
                 self._items[row].append(item)
-                nonBombItems.add(item)
+                nonBombItems.append(item)
         self._bombItems = set()
         for _ in range(bombCount):
-            item = random.sample(nonBombItems, 1)[0]
+            item = random.choice(nonBombItems)
             item.isBomb = True
             nonBombItems.remove(item)
             self._bombItems.add(item)
@@ -117,7 +115,7 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
         return None
 
     def flags(self, index):
-        return super(MinesweeperModel, self).flags(index) | QtCore.Qt.ItemIsEditable
+        return QtCore.Qt.ItemFlags(int(super(MinesweeperModel, self).flags(index)) | int(QtCore.Qt.ItemIsEditable))
 
     def index(self, row, column, parent=QtCore.QModelIndex()):
         if parent.isValid():
@@ -168,14 +166,14 @@ class MinesweeperModel(QtCore.QAbstractItemModel):
             return True
         return False
 
-class MinesweeperDelegate(QtGui.QStyledItemDelegate):
+class MinesweeperDelegate(QtWidgets.QStyledItemDelegate):
     def createEditor(self, parent, option, index):
         return MinesweeperItemEditor(QtCore.QPersistentModelIndex(index), parent)
 
     def paint(self, painter, option, index):
         return
 
-class MinesweeperItemEditor(QtGui.QWidget):
+class MinesweeperItemEditor(QtWidgets.QWidget):
     def __init__(self, index, parent=None):
         super(MinesweeperItemEditor, self).__init__(parent)
         self.index = index
@@ -237,13 +235,13 @@ class MinesweeperItemEditor(QtGui.QWidget):
         bombNeighborCount = self.index.data(MinesweeperModel.BombNeighborRole)
         if bombNeighborCount:
             painter.setPen(QtCore.Qt.red)
-            painter.drawText(event.rect(), QtCore.Qt.AlignCenter, str(bombNeighborCount))
+            painter.drawText(event.rect(), int(QtCore.Qt.AlignCenter), str(bombNeighborCount))
 
 if __name__ == '__main__':
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     model = MinesweeperModel(16, 30, 99)
-    view = QtGui.QTableView()
+    view = QtWidgets.QTableView()
     view.setModel(model)
     view.verticalHeader().hide()
     view.horizontalHeader().hide()
@@ -261,12 +259,12 @@ if __name__ == '__main__':
             index = model.index(row, column)
             view.openPersistentEditor(index)
 
-    model.gameOver.connect(lambda: QtGui.QMessageBox.information(
+    model.gameOver.connect(lambda: QtWidgets.QMessageBox.information(
         view,
         'Game Over',
         'Game Over!'
     ))
-    model.gameWon.connect(lambda: QtGui.QMessageBox.information(
+    model.gameWon.connect(lambda: QtWidgets.QMessageBox.information(
         view,
         'You Win',
         'You Win!'
